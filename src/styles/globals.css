@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom base styles */
+@layer base {
+  :root {
+    --font-sora: 'Sora', system-ui, sans-serif;
+    --font-code: 'Source Code Pro', monospace;
+    --font-grotesk: 'Space Grotesk', sans-serif;
+  }
+
+  * {
+    @apply border-medical-gray-200;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-white text-black antialiased;
+    font-family: var(--font-sora);
+    line-height: 1.6;
+  }
+
+  /* Heading styles with Space Grotesk */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-grotesk font-light text-black;
+    font-family: var(--font-grotesk);
+    line-height: 1.2;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl font-medium;
+  }
+
+  p {
+    @apply text-base leading-relaxed;
+  }
+}
+
+/* Custom component styles */
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6 hover:shadow-elevated transition-shadow duration-200;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 font-code font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply bg-primary-200 text-black hover:bg-primary-300 focus:ring-primary-200;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-black border-2 border-primary-200 hover:bg-primary-50 focus:ring-primary-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-medical-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-200 focus:border-transparent transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-grotesk font-light text-black mb-2;
+  }
+
+  .section {
+    @apply py-16 md:py-24;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-center mb-4;
+  }
+
+  .section-subtitle {
+    @apply text-lg md:text-xl text-center text-medical-gray-600 mb-12 max-w-3xl mx-auto;
+  }
+}
+
+/* Custom utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
