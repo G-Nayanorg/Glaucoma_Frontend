@@ -77,7 +77,7 @@ export function HeroSection() {
                 Try Now
               </Button>
             </Link>
-            <Link href="#how-it-works">
+            <Link href="#detection">
               <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm shadow-xl">
                 Learn More
               </Button>

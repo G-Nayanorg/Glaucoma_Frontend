@@ -14,13 +14,10 @@ import { cn } from '@/utils/cn';
  * Navigation items
  */
 const navItems = [
-  { label: 'Home', href: '#home' },
-  { label: 'About', href: '#about' },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Features', href: '#features' },
-  { label: 'Accuracy', href: '#accuracy' },
-  { label: 'Demo', href: '#demo' },
-  { label: 'Contact', href: '#contact' },
+  { label: 'HOME', href: '#home' },
+  { label: 'ABOUT', href: '#about' },
+  { label: 'DETECTION', href: '#detection' },
+  { label: 'EFFICIENCY', href: '#efficiency' },
 ];
 
 /**
@@ -111,10 +108,10 @@ export function Navbar() {
               </a>
             ))}
             <Link
-              href="/dashboard"
+              href="/auth/login"
               className="ml-4 px-6 py-2.5 bg-primary-200 hover:bg-primary-300 text-black font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
             >
-              Try Now
+              Login
             </Link>
           </div>
 
@@ -171,10 +168,10 @@ export function Navbar() {
                 </a>
               ))}
               <Link
-                href="/dashboard"
+                href="/auth/login"
                 className="mx-4 mt-2 px-6 py-3 bg-primary-200 hover:bg-primary-300 text-black font-semibold rounded-lg transition-colors duration-200 text-center shadow-sm"
               >
-                Try Now
+                Login
               </Link>
             </div>
           </div>
