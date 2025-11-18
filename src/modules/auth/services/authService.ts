@@ -3,28 +3,43 @@
  * Handles all authentication-related API calls
  */
 
-import { post } from '@/utils/api.util';
-import { API_CONFIG } from '@/config/api.config';
+import { API_CONFIG, getApiUrl } from '@/config/api.config';
 import type {
   LoginCredentials,
   RegisterData,
   AuthResponse,
+  User,
   PasswordResetRequest,
+  RefreshTokenRequest,
 } from '../types';
 
 /**
  * Login user
- * @param credentials - User login credentials
- * @returns Auth response with user data and token
+ * @param credentials - User login credentials (username and password)
+ * @returns Auth response with tokens and user data
  */
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   try {
-    const response = await post<AuthResponse>(
-      API_CONFIG.endpoints.auth.login,
-      credentials
-    );
+    // Backend expects application/x-www-form-urlencoded format
+    const formData = new URLSearchParams();
+    formData.append('username', credentials.username);
+    formData.append('password', credentials.password);
 
-    return response.data;
+    const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.login), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Login failed');
+    }
+
+    const data: AuthResponse = await response.json();
+    return data;
   } catch (error) {
     throw error;
   }
@@ -33,16 +48,32 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
 /**
  * Register new user
  * @param data - User registration data
- * @returns Auth response with user data and token
+ * @returns Auth response with tokens and user data
  */
 export async function register(data: RegisterData): Promise<AuthResponse> {
   try {
-    const response = await post<AuthResponse>(
-      API_CONFIG.endpoints.auth.register,
-      data
-    );
+    const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.register), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: data.email,
+        username: data.username,
+        password: data.password,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        tenant_id: data.tenant_id || 'default',
+      }),
+    });
 
-    return response.data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Registration failed');
+    }
+
+    const authData: AuthResponse = await response.json();
+    return authData;
   } catch (error) {
     throw error;
   }
@@ -54,11 +85,13 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
  */
 export async function logout(token: string): Promise<void> {
   try {
-    await post(
-      API_CONFIG.endpoints.auth.logout,
-      {},
-      { token }
-    );
+    await fetch(getApiUrl(API_CONFIG.endpoints.auth.logout), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (error) {
     console.error('Logout error:', error);
     // Continue with local logout even if server logout fails
@@ -70,15 +103,23 @@ export async function logout(token: string): Promise<void> {
  * @param token - Authentication token
  * @returns User data
  */
-export async function getCurrentUser(token: string): Promise<AuthResponse['user']> {
+export async function getCurrentUser(token: string): Promise<User> {
   try {
-    const response = await post<AuthResponse['user']>(
-      API_CONFIG.endpoints.auth.me,
-      {},
-      { token }
-    );
+    const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.me), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-    return response.data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Failed to fetch user data');
+    }
+
+    const userData: User = await response.json();
+    return userData;
   } catch (error) {
     throw error;
   }
@@ -92,12 +133,20 @@ export async function requestPasswordReset(
   data: PasswordResetRequest
 ): Promise<{ message: string }> {
   try {
-    const response = await post<{ message: string }>(
-      '/auth/password-reset',
-      data
-    );
+    const response = await fetch(getApiUrl('/auth/password-reset'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
 
-    return response.data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Password reset request failed');
+    }
+
+    return await response.json();
   } catch (error) {
     throw error;
   }
@@ -106,18 +155,27 @@ export async function requestPasswordReset(
 /**
  * Refresh authentication token
  * @param refreshToken - Refresh token
- * @returns New auth token
+ * @returns New auth response with new tokens
  */
 export async function refreshAuthToken(
   refreshToken: string
-): Promise<{ token: string }> {
+): Promise<AuthResponse> {
   try {
-    const response = await post<{ token: string }>(
-      API_CONFIG.endpoints.auth.refresh,
-      { refreshToken }
-    );
+    const response = await fetch(getApiUrl(API_CONFIG.endpoints.auth.refresh), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
 
-    return response.data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Token refresh failed');
+    }
+
+    const data: AuthResponse = await response.json();
+    return data;
   } catch (error) {
     throw error;
   }

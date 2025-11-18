@@ -5,8 +5,8 @@
 
 export const API_CONFIG = {
   // Base URLs from environment variables
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
-  authURL: process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:4000/api/auth',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  authURL: process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:8000/api/v1/auth',
 
   // Timeout settings
   timeout: 30000, // 30 seconds
@@ -20,11 +20,15 @@ export const API_CONFIG = {
   // API Endpoints
   endpoints: {
     auth: {
-      login: '/auth/login',
-      register: '/auth/register',
-      logout: '/auth/logout',
-      refresh: '/auth/refresh',
-      me: '/auth/me',
+      login: '/api/v1/auth/login',
+      register: '/api/v1/auth/register',
+      logout: '/api/v1/auth/logout',
+      refresh: '/api/v1/auth/refresh',
+      me: '/api/v1/auth/me',
+    },
+    prediction: {
+      single: '/predict',
+      batch: '/batch-predict',
     },
     users: {
       list: '/users',

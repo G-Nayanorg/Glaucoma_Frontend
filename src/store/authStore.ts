@@ -5,32 +5,27 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-
-/**
- * User interface
- */
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  avatar?: string;
-}
+import type { User, AuthResponse } from '@/modules/auth/types';
 
 /**
  * Auth State Interface
  */
 interface AuthState {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  userId: string | null;
+  tenantId: string | null;
+  role: string | null;
   isAuthenticated: boolean;
 
   // Actions
   setUser: (user: User) => void;
-  setToken: (token: string) => void;
-  login: (user: User, token: string) => void;
+  setAuthData: (authData: AuthResponse) => void;
+  login: (authData: AuthResponse, user?: User) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
+  updateTokens: (accessToken: string, refreshToken: string) => void;
 }
 
 /**
@@ -42,29 +37,53 @@ export const useAuthStore = create<AuthState>()(
       (set) => ({
         // Initial state
         user: null,
-        token: null,
+        accessToken: null,
+        refreshToken: null,
+        userId: null,
+        tenantId: null,
+        role: null,
         isAuthenticated: false,
 
         // Actions
         setUser: (user) => set({ user, isAuthenticated: true }),
 
-        setToken: (token) => set({ token }),
+        setAuthData: (authData) => set({
+          accessToken: authData.access_token,
+          refreshToken: authData.refresh_token,
+          userId: authData.user_id,
+          tenantId: authData.tenant_id,
+          role: authData.role,
+          isAuthenticated: true,
+        }),
 
-        login: (user, token) => set({
-          user,
-          token,
+        login: (authData, user) => set({
+          accessToken: authData.access_token,
+          refreshToken: authData.refresh_token,
+          userId: authData.user_id,
+          tenantId: authData.tenant_id,
+          role: authData.role,
+          user: user || null,
           isAuthenticated: true
         }),
 
         logout: () => set({
           user: null,
-          token: null,
+          accessToken: null,
+          refreshToken: null,
+          userId: null,
+          tenantId: null,
+          role: null,
           isAuthenticated: false
         }),
 
         updateUser: (updates) => set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         })),
+
+        updateTokens: (accessToken, refreshToken) => set({
+          accessToken,
+          refreshToken,
+        }),
       }),
       {
         name: 'auth-storage',

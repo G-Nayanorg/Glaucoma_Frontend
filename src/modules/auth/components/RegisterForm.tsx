@@ -21,10 +21,13 @@ export function RegisterForm() {
   const { login: setAuth } = useAuthStore();
 
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
+    first_name: '',
+    last_name: '',
     password: '',
     confirmPassword: '',
+    tenant_id: 'default',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -36,8 +39,16 @@ export function RegisterForm() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name) {
-      newErrors.name = 'Name is required';
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
+    }
+
+    if (!formData.first_name) {
+      newErrors.first_name = 'First name is required';
+    }
+
+    if (!formData.last_name) {
+      newErrors.last_name = 'Last name is required';
     }
 
     if (!formData.email) {
@@ -76,11 +87,14 @@ export function RegisterForm() {
     setLoading(true);
 
     try {
-      const response = await register(formData);
-      setAuth(response.user, response.token);
-      router.push('/dashboard');
+      const authResponse = await register(formData);
+      setAuth(authResponse);
+
+      // Redirect based on role (new users typically get 'no_role')
+      const dashboardPath = getRoleDashboardPath(authResponse.role);
+      router.push(dashboardPath);
     } catch (error) {
-      if (error instanceof ApiError) {
+      if (error instanceof Error) {
         setApiError(error.message);
       } else {
         setApiError('An unexpected error occurred. Please try again.');
@@ -90,24 +104,82 @@ export function RegisterForm() {
     }
   };
 
+  /**
+   * Get dashboard path based on user role
+   */
+  const getRoleDashboardPath = (role: string): string => {
+    switch (role) {
+      case 'admin':
+        return '/dashboard/admin';
+      case 'doctor':
+        return '/dashboard/doctor';
+      case 'radiologist':
+        return '/dashboard/radiologist';
+      case 'technician':
+        return '/dashboard/technician';
+      case 'viewer':
+        return '/dashboard/viewer';
+      default:
+        return '/dashboard';
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Name Field */}
+      {/* Username Field */}
       <div>
-        <label htmlFor="name" className="label">
-          Full Name
+        <label htmlFor="username" className="label">
+          Username
         </label>
         <input
-          id="name"
+          id="username"
           type="text"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="input-field"
-          placeholder="John Doe"
-          autoComplete="name"
+          placeholder="johndoe"
+          autoComplete="username"
         />
-        {errors.name && (
-          <p className="mt-1 text-sm text-error-600">{errors.name}</p>
+        {errors.username && (
+          <p className="mt-1 text-sm text-error-600">{errors.username}</p>
+        )}
+      </div>
+
+      {/* First Name Field */}
+      <div>
+        <label htmlFor="first_name" className="label">
+          First Name
+        </label>
+        <input
+          id="first_name"
+          type="text"
+          value={formData.first_name}
+          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+          className="input-field"
+          placeholder="John"
+          autoComplete="given-name"
+        />
+        {errors.first_name && (
+          <p className="mt-1 text-sm text-error-600">{errors.first_name}</p>
+        )}
+      </div>
+
+      {/* Last Name Field */}
+      <div>
+        <label htmlFor="last_name" className="label">
+          Last Name
+        </label>
+        <input
+          id="last_name"
+          type="text"
+          value={formData.last_name}
+          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+          className="input-field"
+          placeholder="Doe"
+          autoComplete="family-name"
+        />
+        {errors.last_name && (
+          <p className="mt-1 text-sm text-error-600">{errors.last_name}</p>
         )}
       </div>
 

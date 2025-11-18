@@ -21,7 +21,7 @@ export function LoginForm() {
   const { login: setAuth } = useAuthStore();
 
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -34,10 +34,8 @@ export function LoginForm() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!isValidEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
+    if (!formData.username) {
+      newErrors.username = 'Username is required';
     }
 
     if (!formData.password) {
@@ -62,11 +60,14 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const response = await login(formData);
-      setAuth(response.user, response.token);
-      router.push('/dashboard');
+      const authResponse = await login(formData);
+      setAuth(authResponse);
+
+      // Redirect based on role
+      const dashboardPath = getRoleDashboardPath(authResponse.role);
+      router.push(dashboardPath);
     } catch (error) {
-      if (error instanceof ApiError) {
+      if (error instanceof Error) {
         setApiError(error.message);
       } else {
         setApiError('An unexpected error occurred. Please try again.');
@@ -76,24 +77,44 @@ export function LoginForm() {
     }
   };
 
+  /**
+   * Get dashboard path based on user role
+   */
+  const getRoleDashboardPath = (role: string): string => {
+    switch (role) {
+      case 'admin':
+        return '/dashboard/admin';
+      case 'doctor':
+        return '/dashboard/doctor';
+      case 'radiologist':
+        return '/dashboard/radiologist';
+      case 'technician':
+        return '/dashboard/technician';
+      case 'viewer':
+        return '/dashboard/viewer';
+      default:
+        return '/dashboard';
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Email Field */}
+      {/* Username Field */}
       <div>
-        <label htmlFor="email" className="label">
-          Email Address
+        <label htmlFor="username" className="label">
+          Username
         </label>
         <input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          id="username"
+          type="text"
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
           className="input-field"
-          placeholder="you@example.com"
-          autoComplete="email"
+          placeholder="your-username"
+          autoComplete="username"
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-error-600">{errors.email}</p>
+        {errors.username && (
+          <p className="mt-1 text-sm text-error-600">{errors.username}</p>
         )}
       </div>
 
