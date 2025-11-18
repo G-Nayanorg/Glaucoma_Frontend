@@ -4,9 +4,9 @@
  */
 
 export const APP_CONFIG = {
-  name: process.env.NEXT_PUBLIC_APP_NAME || 'Monolithic App',
+  name: process.env.NEXT_PUBLIC_APP_NAME || 'Glaucoma',
   version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-  description: 'Feature-based monolithic Next.js application',
+  description: 'Glaucoma Detection System',
 
   // Pagination
   pagination: {

@@ -68,3 +68,38 @@ export type RiskLevel = 'low' | 'moderate' | 'high' | 'critical';
  * Prediction label types
  */
 export type PredictionLabel = 'Normal' | 'Glaucoma';
+
+/**
+ * Saved prediction record
+ */
+export interface SavedPrediction {
+  id: string;
+  prediction_id: string;
+  patient_id: string;
+  patient_name?: string;
+  image_url?: string;
+  prediction: number;
+  label: string;
+  probability: number;
+  confidence: number;
+  risk_level: string;
+  recommendations: string[];
+  processing_time_ms: number;
+  created_at: string;
+  created_by: string;
+  reviewed_by?: string;
+  reviewed_at?: string;
+  notes?: string;
+  tenant_id: string;
+}
+
+/**
+ * Prediction list response
+ */
+export interface PredictionListResponse {
+  predictions: SavedPrediction[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}

@@ -45,9 +45,9 @@ export function Header() {
 
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">M</span>
+                <span className="text-white font-bold text-lg">G</span>
               </div>
-              <span className="font-bold text-xl text-secondary-900">MonoApp</span>
+              <span className="font-bold text-xl text-secondary-900">Glaucoma</span>
             </Link>
           </div>
 
@@ -75,10 +75,12 @@ export function Header() {
                 <div className="hidden sm:flex items-center gap-2">
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <span className="text-primary-700 font-medium text-sm">
-                      {user?.name?.charAt(0).toUpperCase()}
+                      {user?.first_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <span className="text-sm font-medium text-secondary-700">{user?.name}</span>
+                  <span className="text-sm font-medium text-secondary-700">
+                    {user?.first_name || user?.username}
+                  </span>
                 </div>
                 <Button variant="outline" size="sm" onClick={handleLogout}>
                   Logout
