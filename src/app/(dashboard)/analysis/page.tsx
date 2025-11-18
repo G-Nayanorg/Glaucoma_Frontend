@@ -402,13 +402,13 @@ function PatientPredictionCard({ data, onViewDetails }: PatientPredictionCardPro
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => onViewDetails(data)}
-            className="px-4 py-2.5 bg-white border-2 border-primary-600 text-primary-600 hover:bg-primary-50 rounded-lg font-medium text-sm transition-colors"
+            className="px-3 py-2 bg-white border-2 border-primary-600 text-primary-600 hover:bg-primary-50 rounded-lg font-medium text-sm transition-colors whitespace-nowrap"
           >
             View Details
           </button>
           <button
             onClick={() => router.push(`/prediction?patient_id=${patient.patient_id}`)}
-            className="px-4 py-2.5 bg-primary-600 text-white hover:bg-primary-700 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors"
+            className="px-3 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg font-medium text-sm flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

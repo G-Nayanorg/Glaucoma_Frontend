@@ -6,6 +6,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAppStore } from '@/store';
 import { useAuthStore } from '@/store/authStore';
@@ -116,9 +117,14 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-secondary-200">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-600 to-primary-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">G</span>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Glaucoma AI Logo"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain"
+                priority
+              />
               <span className="font-bold text-lg text-secondary-900">Glaucoma</span>
             </Link>
 
