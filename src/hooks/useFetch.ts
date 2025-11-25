@@ -54,7 +54,7 @@ export function useFetch<T = any>(
     requireAuth = false,
   } = options;
 
-  const { token } = useAuthStore();
+  const { accessToken: token } = useAuthStore();
   const [state, setState] = useState<FetchState<T>>({
     data: null,
     loading: autoFetch,
@@ -138,7 +138,7 @@ export function useMutation<T = any>(
   options: UseMutationOptions = {}
 ): UseMutationReturn<T> {
   const { onSuccess, onError } = options;
-  const { token } = useAuthStore();
+  const { accessToken: token } = useAuthStore();
 
   const [state, setState] = useState<FetchState<T>>({
     data: null,

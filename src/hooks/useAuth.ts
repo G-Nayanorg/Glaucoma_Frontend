@@ -12,11 +12,11 @@ import { useAuthStore } from '@/store/authStore';
  * Provides easy access to auth state and methods
  */
 export function useAuth() {
-  const { user, token, isAuthenticated, login, logout, updateUser } = useAuthStore();
+  const { user, accessToken, isAuthenticated, login, logout, updateUser } = useAuthStore();
 
   return {
     user,
-    token,
+    token: accessToken,
     isAuthenticated,
     login,
     logout,

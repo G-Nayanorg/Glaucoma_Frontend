@@ -67,7 +67,7 @@ export function PatientTable({
   onDelete,
   onViewPredictions,
 }: PatientTableProps) {
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const canUpdate = hasPermission(userRole, 'patient:update');
   const canDelete = hasPermission(userRole, 'patient:delete');

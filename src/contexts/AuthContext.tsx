@@ -43,10 +43,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // You can add token validation logic here
     // For example, verify the token with your backend
     const validateToken = async () => {
-      if (authStore.token) {
+      if (authStore.accessToken) {
         try {
           // Add your token validation logic
-          // const response = await validateAuthToken(authStore.token);
+          // const response = await validateAuthToken(authStore.accessToken);
           // if (!response.valid) authStore.logout();
         } catch (error) {
           console.error('Token validation error:', error);
@@ -60,9 +60,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const value: AuthContextType = {
     user: authStore.user,
-    token: authStore.token,
+    token: authStore.accessToken,
     isAuthenticated: authStore.isAuthenticated,
-    login: authStore.login,
+    login: (user, token) => {
+      // Create a mock AuthResponse since the store expects that format
+      const authResponse: any = {
+        access_token: token,
+        refresh_token: null,
+        token_type: "bearer",
+        user_id: user.id,
+        tenant_id: user.tenant_id,
+        email: user.email,
+        role: user.role,
+      };
+      authStore.login(authResponse, user);
+    },
     logout: authStore.logout,
     updateUser: authStore.updateUser,
   };
