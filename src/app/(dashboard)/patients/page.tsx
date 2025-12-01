@@ -28,7 +28,7 @@ import type { UserRole } from '@/modules/auth/types';
  */
 export default function PatientsPage() {
   const router = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
+  const { isAuthenticated, role, isInitialized } = useAuthStore();
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,15 +47,18 @@ export default function PatientsPage() {
 
   // Redirect if no read permission
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
 
-    if (!canRead) {
-      router.push('/dashboard');
+      if (!canRead) {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, canRead, router]);
+  }, [isAuthenticated, canRead, isInitialized, router]);
 
   // Load patients
   const loadPatients = async () => {
@@ -105,7 +108,7 @@ export default function PatientsPage() {
 
     try {
       setFormLoading(true);
-      await updatePatient(editingPatient.id, data);
+      await updatePatient(editingPatient.patient_id, data);
       setShowForm(false);
       setEditingPatient(null);
       loadPatients();
@@ -120,11 +123,17 @@ export default function PatientsPage() {
   // Handle delete patient
   const handleDeletePatient = async (patient: Patient) => {
     try {
-      await deletePatient(patient.id);
+      await deletePatient(patient.patient_id);
+
+      // Remove patient from local state immediately for instant UI update
+      setPatients((prevPatients) => prevPatients.filter((p) => p.patient_id !== patient.patient_id));
+
+      // Also reload from server to ensure consistency
       loadPatients();
     } catch (err) {
       console.error('Error deleting patient:', err);
       alert(err instanceof Error ? err.message : 'Failed to delete patient');
+      throw err; // Re-throw to let the table component know deletion failed
     }
   };
 
@@ -136,12 +145,12 @@ export default function PatientsPage() {
 
   // Handle create prediction
   const handleCreatePrediction = (patient: Patient) => {
-    router.push(`/prediction?patient_id=${patient.id}`);
+    router.push(`/prediction?patient_id=${patient.patient_id}`);
   };
 
   // Handle view predictions
   const handleViewPredictions = (patient: Patient) => {
-    router.push(`/analysis?patient_id=${patient.id}`);
+    router.push(`/analysis?patient_id=${patient.patient_id}`);
   };
 
   // Handle form cancel
@@ -213,7 +222,7 @@ export default function PatientsPage() {
               {/* Modal Header */}
               <div className="flex items-center justify-between p-4 sm:p-6 border-b border-secondary-200 flex-shrink-0">
                 <h2 className="text-lg sm:text-xl font-semibold text-secondary-900">
-                  {editingPatient ? 'Edit Patient' : 'Create New Patient'}
+                  {editingPatient ? 'Update Patient' : 'Create New Patient'}
                 </h2>
                 <button
                   onClick={handleFormCancel}

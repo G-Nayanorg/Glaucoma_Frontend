@@ -6,18 +6,17 @@
 'use client';
 
 import { createContext, useContext, useEffect, ReactNode } from 'react';
-import { useAuthStore, User } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * Auth Context Type
  */
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
+  isInitialized: boolean;
+  login: (authData: import('@/modules/auth/types').AuthResponse, user?: import('@/modules/auth/types').User) => void;
   logout: () => void;
-  updateUser: (updates: Partial<User>) => void;
+  updateUser: (updates: Partial<import('@/modules/auth/types').User>) => void;
 }
 
 /**
@@ -38,30 +37,14 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const authStore = useAuthStore();
 
-  // Hydrate auth state on mount
+  // Initialize auth state on mount
   useEffect(() => {
-    // You can add token validation logic here
-    // For example, verify the token with your backend
-    const validateToken = async () => {
-      if (authStore.token) {
-        try {
-          // Add your token validation logic
-          // const response = await validateAuthToken(authStore.token);
-          // if (!response.valid) authStore.logout();
-        } catch (error) {
-          console.error('Token validation error:', error);
-          authStore.logout();
-        }
-      }
-    };
-
-    validateToken();
-  }, [authStore]);
+    // The auth store handles initialization internally now
+  }, []);
 
   const value: AuthContextType = {
-    user: authStore.user,
-    token: authStore.token,
     isAuthenticated: authStore.isAuthenticated,
+    isInitialized: authStore.isInitialized,
     login: authStore.login,
     logout: authStore.logout,
     updateUser: authStore.updateUser,

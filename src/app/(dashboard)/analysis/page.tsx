@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
@@ -18,7 +18,7 @@ import {
   getRiskLevelColor,
   getPredictionLabelColor,
 } from '@/modules/prediction/services/predictionService';
-import { getPatients } from '@/modules/patient/services/patientService';
+import { getPatients, getPatientById } from '@/modules/patient/services/patientService';
 import type { UserRole } from '@/modules/auth/types';
 import type { Patient } from '@/modules/patient/types';
 
@@ -57,7 +57,8 @@ function formatDate(dateString: string): string {
  */
 export default function AnalysisPage() {
   const router = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, role, isInitialized } = useAuthStore();
 
   const [patientsWithPredictions, setPatientsWithPredictions] = useState<PatientWithPredictions[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,17 +71,23 @@ export default function AnalysisPage() {
   const canRead = hasPermission(userRole, 'prediction:read');
   const canCreatePrediction = hasPermission(userRole, 'prediction:create');
 
+  // Get patient_id from URL query params
+  const patientIdFromUrl = searchParams.get('patient_id');
+
   // Check authentication and permissions
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
 
-    if (!canRead) {
-      router.push('/dashboard');
+      if (!canRead) {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, canRead, router]);
+  }, [isAuthenticated, canRead, isInitialized, router]);
 
   // Load all patients with their predictions
   const loadPatientsWithPredictions = async () => {
@@ -88,9 +95,24 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch all patients
-      const patientsResponse = await getPatients({ page: 1, page_size: 100 });
-      const patients = patientsResponse.patients;
+      let patients: Patient[] = [];
+
+      // If patient_id is provided in URL, fetch only that patient
+      if (patientIdFromUrl) {
+        try {
+          const patient = await getPatientById(patientIdFromUrl);
+          patients = [patient];
+        } catch (err) {
+          console.error('Error loading patient:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load patient');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Fetch all patients
+        const patientsResponse = await getPatients({ page: 1, page_size: 100 });
+        patients = patientsResponse.patients;
+      }
 
       // Fetch predictions for each patient
       const patientsWithPreds: PatientWithPredictions[] = [];
@@ -148,7 +170,7 @@ export default function AnalysisPage() {
     if (canRead) {
       loadPatientsWithPredictions();
     }
-  }, [canRead]);
+  }, [canRead, patientIdFromUrl]);
 
   // Filter patients
   const filteredPatients = patientsWithPredictions.filter((pwp) => {
@@ -184,10 +206,24 @@ export default function AnalysisPage() {
     <div className="container-custom py-8">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-secondary-900">Analysis & Predictions</h1>
-        <p className="text-secondary-600 mt-1">
-          View all patients with glaucoma detection predictions
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900">Analysis & Predictions</h1>
+            <p className="text-secondary-600 mt-1">
+              {patientIdFromUrl && patientsWithPredictions.length > 0
+                ? `Viewing predictions for ${patientsWithPredictions[0].patient.first_name} ${patientsWithPredictions[0].patient.last_name}`
+                : 'View all patients with glaucoma detection predictions'}
+            </p>
+          </div>
+          {patientIdFromUrl && (
+            <Button variant="outline" onClick={() => router.push('/analysis')}>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to All Patients
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -293,7 +329,7 @@ export default function AnalysisPage() {
           {filteredPatients.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPatients.map((pwp) => (
-                <PatientPredictionCard key={pwp.patient.id} data={pwp} onViewDetails={setSelectedPatient} />
+                <PatientPredictionCard key={pwp.patient.patient_id} data={pwp} onViewDetails={setSelectedPatient} />
               ))}
             </div>
           )}

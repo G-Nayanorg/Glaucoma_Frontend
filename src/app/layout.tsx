@@ -7,7 +7,7 @@
 import type { Metadata } from 'next';
 import { Sora, Source_Code_Pro, Space_Grotesk } from 'next/font/google';
 import '@/styles/globals.css';
-import { APP_CONFIG } from '@/config/app.config';
+import { ClientProviders } from './ClientProviders';
 
 // Font configuration
 const sora = Sora({
@@ -73,7 +73,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className={`${sora.variable} ${sourceCodePro.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen bg-white antialiased font-sans text-black">
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

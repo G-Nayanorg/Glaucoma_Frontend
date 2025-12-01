@@ -54,7 +54,7 @@ export function useFetch<T = any>(
     requireAuth = false,
   } = options;
 
-  const { token } = useAuthStore();
+  const authStore = useAuthStore();
   const [state, setState] = useState<FetchState<T>>({
     data: null,
     loading: autoFetch,
@@ -73,7 +73,7 @@ export function useFetch<T = any>(
         body: body ? JSON.stringify(body) : undefined,
         headers,
         params,
-        token: requireAuth ? token || undefined : undefined,
+        token: requireAuth ? authStore.accessToken || undefined : undefined,
       });
 
       setState({
@@ -82,13 +82,44 @@ export function useFetch<T = any>(
         error: null,
       });
     } catch (err) {
+      // Check if error is a 401 Unauthorized error and we need to refresh the token
+      if (err instanceof ApiError && err.status === 401 && requireAuth) {
+        const refreshSuccess = await authStore.refreshTokenIfNeeded();
+        if (refreshSuccess) {
+          // Retry the request with the new token
+          try {
+            const response: ApiResponse<T> = await fetchApi(endpoint, {
+              method,
+              body: body ? JSON.stringify(body) : undefined,
+              headers,
+              params,
+              token: authStore.accessToken || undefined,
+            });
+
+            setState({
+              data: response.data,
+              loading: false,
+              error: null,
+            });
+            return;
+          } catch (retryErr) {
+            setState({
+              data: null,
+              loading: false,
+              error: retryErr instanceof ApiError ? retryErr : new ApiError(500, 'An error occurred'),
+            });
+            return;
+          }
+        }
+      }
+
       setState({
         data: null,
         loading: false,
         error: err instanceof ApiError ? err : new ApiError(500, 'An error occurred'),
       });
     }
-  }, [endpoint, method, body, headers, params, token, requireAuth]);
+  }, [endpoint, method, body, headers, params, authStore.accessToken, requireAuth, authStore]);
 
   /**
    * Manually update data (optimistic updates)
@@ -138,7 +169,7 @@ export function useMutation<T = any>(
   options: UseMutationOptions = {}
 ): UseMutationReturn<T> {
   const { onSuccess, onError } = options;
-  const { token } = useAuthStore();
+  const authStore = useAuthStore();
 
   const [state, setState] = useState<FetchState<T>>({
     data: null,
@@ -157,7 +188,7 @@ export function useMutation<T = any>(
         const response: ApiResponse<T> = await fetchApi(endpoint, {
           method,
           body: body ? JSON.stringify(body) : undefined,
-          token: token || undefined,
+          token: authStore.accessToken || undefined,
         });
 
         setState({
@@ -170,6 +201,45 @@ export function useMutation<T = any>(
           onSuccess(response.data);
         }
       } catch (err) {
+        // Check if error is a 401 Unauthorized error and we need to refresh the token
+        if (err instanceof ApiError && err.status === 401) {
+          const refreshSuccess = await authStore.refreshTokenIfNeeded();
+          if (refreshSuccess) {
+            // Retry the request with the new token
+            try {
+              const response: ApiResponse<T> = await fetchApi(endpoint, {
+                method,
+                body: body ? JSON.stringify(body) : undefined,
+                token: authStore.accessToken || undefined,
+              });
+
+              setState({
+                data: response.data,
+                loading: false,
+                error: null,
+              });
+
+              if (onSuccess) {
+                onSuccess(response.data);
+              }
+              return;
+            } catch (retryErr) {
+              const error = retryErr instanceof ApiError ? retryErr : new ApiError(500, 'An error occurred');
+
+              setState({
+                data: null,
+                loading: false,
+                error,
+              });
+
+              if (onError) {
+                onError(error);
+              }
+              return;
+            }
+          }
+        }
+
         const error = err instanceof ApiError ? err : new ApiError(500, 'An error occurred');
 
         setState({
@@ -183,7 +253,7 @@ export function useMutation<T = any>(
         }
       }
     },
-    [endpoint, method, token, onSuccess, onError]
+    [endpoint, method, authStore.accessToken, onSuccess, onError, authStore]
   );
 
   /**

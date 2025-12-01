@@ -21,16 +21,19 @@ import type { User } from '@/modules/users/types';
  */
 export default function UsersPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuth();
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isInitialized, router]);
 
   // Load mock users data
   useEffect(() => {
