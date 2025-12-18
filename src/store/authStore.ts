@@ -8,6 +8,9 @@ import { devtools, persist } from 'zustand/middleware';
 import type { User, AuthResponse } from '@/modules/auth/types';
 import { refreshAuthToken } from '@/modules/auth/services/authService';
 
+// Re-export the User type so it can be imported from this module
+export type { User };
+
 /**
  * Auth State Interface
  */

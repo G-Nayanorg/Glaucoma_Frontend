@@ -3,18 +3,14 @@
  * Auto-scrolling background images with hero content
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Button } from '@/components/common/Button';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/common/Button";
 
-const heroImages = [
-  '/Hero-1.png',
-  '/Hero-2.jpg',
-  '/Hero-3.jpg',
-];
+const heroImages = ["/Hero-1.png", "/Hero-2.jpg", "/Hero-3.jpg"];
 
 export function HeroSection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -31,14 +27,17 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section id="home" className="relative py-20 md:py-32 overflow-hidden pt-32">
+    <section
+      id="home"
+      className="relative py-20 md:py-32 overflow-hidden pt-32"
+    >
       {/* Background Images with Transition */}
       <div className="absolute inset-0">
         {heroImages.map((image, index) => (
           <div
             key={image}
             className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+              index === currentImageIndex ? "opacity-100" : "opacity-0"
             }`}
           >
             <Image
@@ -68,17 +67,26 @@ export function HeroSection() {
             Early Diagnosis for Better Vision
           </p>
           <p className="text-lg text-white/90 mb-10 max-w-3xl mx-auto drop-shadow-md">
-            Upload retinal images and get instant AI-based analysis to assist in early glaucoma detection.
-            Our advanced deep learning algorithms provide accurate, reliable results in seconds.
+            Upload retinal images and get instant AI-based analysis to assist in
+            early glaucoma detection. Our advanced deep learning algorithms
+            provide accurate, reliable results in seconds.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/dashboard">
-              <Button size="lg" className="bg-primary-200 hover:bg-primary-300 text-black font-semibold px-8 py-4 text-lg shadow-xl">
+            <Link href={""}>
+              {/*   <Link href="/dashboard">  */}
+              <Button
+                size="lg"
+                className="bg-primary-200 hover:bg-primary-300 text-black font-semibold px-8 py-4 text-lg shadow-xl"
+              >
                 Try Now
               </Button>
             </Link>
             <Link href="#detection">
-              <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm shadow-xl">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg backdrop-blur-sm shadow-xl"
+              >
                 Learn More
               </Button>
             </Link>

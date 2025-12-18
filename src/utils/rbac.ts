@@ -56,8 +56,20 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[] | ['*']> = {
  * @returns true if the user has the permission, false otherwise
  */
 export function hasPermission(userRole: UserRole, permission: Permission): boolean {
-  const permissions = ROLE_PERMISSIONS[userRole] || [];
-  return permissions.includes('*') || permissions.includes(permission);
+  const rolePermissions = ROLE_PERMISSIONS[userRole];
+
+  // Check if role has wildcard permissions ('*' array)
+  if (Array.isArray(rolePermissions) && rolePermissions.length > 0 && rolePermissions[0] === '*') {
+    return true;
+  }
+
+  // For specific permissions, cast to Permission[] and check
+  if (Array.isArray(rolePermissions)) {
+    return (rolePermissions as Permission[]).includes(permission);
+  }
+
+  // Return false if no permissions array found
+  return false;
 }
 
 /**
@@ -83,8 +95,8 @@ export function hasPermissions(
  * @param userRole - The user's role
  * @returns Array of permissions for the role
  */
-export function getRolePermissions(userRole: UserRole): Permission[] | ['*'] {
-  return ROLE_PERMISSIONS[userRole] || [];
+export function getRolePermissions(userRole: UserRole): (Permission | '*')[] {
+  return (ROLE_PERMISSIONS[userRole] || []) as (Permission | '*')[];
 }
 
 /**

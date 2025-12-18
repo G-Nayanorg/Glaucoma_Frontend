@@ -16,7 +16,7 @@ export function useAuth() {
 
   return {
     user,
-    token,
+    token: accessToken,
     isAuthenticated,
     isInitialized,
     login,

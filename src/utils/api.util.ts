@@ -69,10 +69,10 @@ export async function fetchApi<T = any>(
   }
 
   // Build headers
-  const requestHeaders: HeadersInit = {
+  const requestHeaders = {
     ...API_CONFIG.headers,
     ...headers,
-  };
+  } as Record<string, string>;
 
   // Add authorization header if token provided
   if (authToken) {

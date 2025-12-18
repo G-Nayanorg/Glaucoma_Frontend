@@ -20,7 +20,19 @@ interface PatientFormProps {
  * Patient Form Component
  */
 export function PatientForm({ patient, onSubmit, onCancel, isLoading }: PatientFormProps) {
-  const [formData, setFormData] = useState<any>({
+  interface PatientFormData {
+    first_name: string;
+    last_name: string;
+    mrn: string;
+    date_of_birth: string;
+    gender: string;
+    email: string;
+    phone: string;
+    address: string;
+    medical_history: string;
+  }
+
+  const [formData, setFormData] = useState<PatientFormData>({
     first_name: '',
     last_name: '',
     mrn: '',
@@ -57,10 +69,10 @@ export function PatientForm({ patient, onSubmit, onCancel, isLoading }: PatientF
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev: PatientFormData) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
     if (errors[name]) {
-      setErrors((prev) => {
+      setErrors((prev: Record<string, string>) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;

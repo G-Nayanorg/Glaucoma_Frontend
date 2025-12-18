@@ -120,6 +120,17 @@ export default function PatientsPage() {
     }
   };
 
+  // Generic submit handler
+  const handleSubmit = async (data: CreatePatientData | UpdatePatientData) => {
+    if (editingPatient) {
+      // Type assertion to UpdatePatientData since we know we're in update mode
+      await handleUpdatePatient(data as UpdatePatientData);
+    } else {
+      // Type assertion to CreatePatientData since we know we're in create mode
+      await handleCreatePatient(data as CreatePatientData);
+    }
+  };
+
   // Handle delete patient
   const handleDeletePatient = async (patient: Patient) => {
     try {
@@ -240,7 +251,7 @@ export default function PatientsPage() {
               <div className="p-4 sm:p-6 overflow-y-auto flex-1 overscroll-contain">
                 <PatientForm
                   patient={editingPatient}
-                  onSubmit={editingPatient ? handleUpdatePatient : handleCreatePatient}
+                  onSubmit={handleSubmit}
                   onCancel={handleFormCancel}
                   isLoading={formLoading}
                 />
