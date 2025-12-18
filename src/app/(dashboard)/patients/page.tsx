@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
@@ -61,7 +61,7 @@ export default function PatientsPage() {
   }, [isAuthenticated, canRead, isInitialized, router]);
 
   // Load patients
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -78,13 +78,13 @@ export default function PatientsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchQuery]);
 
   useEffect(() => {
     if (canRead) {
       loadPatients();
     }
-  }, [currentPage, searchQuery, canRead]);
+  }, [canRead, loadPatients]);
 
   // Handle create patient
   const handleCreatePatient = async (data: CreatePatientData) => {

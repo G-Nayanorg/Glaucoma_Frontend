@@ -59,7 +59,7 @@ export async function fetchApi<T = any>(
   const { token, params, headers, skipAuth = false, ...fetchOptions } = options;
 
   // Get the current auth token if not provided explicitly and not skipping auth
-  const authStore = useAuthStore();
+  const authStore = useAuthStore.getState();
   const authToken = token ?? (skipAuth ? undefined : authStore.accessToken);
 
   // Build URL with query params if provided
@@ -100,10 +100,10 @@ export async function fetchApi<T = any>(
       if (refreshSuccess) {
         // Retry the request with the new token
         const newAuthToken = authStore.accessToken;
-        const retryHeaders: HeadersInit = {
+        const retryHeaders = {
           ...API_CONFIG.headers,
           ...headers,
-        };
+        } as Record<string, string>;
         if (newAuthToken) {
           retryHeaders['Authorization'] = `Bearer ${newAuthToken}`;
         }

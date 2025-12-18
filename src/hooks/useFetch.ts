@@ -119,7 +119,7 @@ export function useFetch<T = any>(
         error: err instanceof ApiError ? err : new ApiError(500, 'An error occurred'),
       });
     }
-  }, [endpoint, method, body, headers, params, authStore.accessToken, requireAuth, authStore]);
+  }, [endpoint, method, body, headers, params, requireAuth, authStore]);
 
   /**
    * Manually update data (optimistic updates)
@@ -253,7 +253,7 @@ export function useMutation<T = any>(
         }
       }
     },
-    [endpoint, method, authStore.accessToken, onSuccess, onError, authStore]
+    [endpoint, method, onSuccess, onError, authStore]
   );
 
   /**

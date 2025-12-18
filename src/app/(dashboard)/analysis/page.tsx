@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
@@ -90,7 +90,7 @@ export default function AnalysisPage() {
   }, [isAuthenticated, canRead, isInitialized, router]);
 
   // Load all patients with their predictions
-  const loadPatientsWithPredictions = async () => {
+  const loadPatientsWithPredictions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -164,13 +164,13 @@ export default function AnalysisPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patientIdFromUrl]);
 
   useEffect(() => {
     if (canRead) {
       loadPatientsWithPredictions();
     }
-  }, [canRead, patientIdFromUrl]);
+  }, [canRead, loadPatientsWithPredictions]);
 
   // Filter patients
   const filteredPatients = patientsWithPredictions.filter((pwp) => {

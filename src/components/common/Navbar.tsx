@@ -107,12 +107,12 @@ export function Navbar() {
                 {item.label}
               </a>
             ))}
-            {/* <Link
+            <Link
               href="/auth/login"
               className="ml-4 px-6 py-2.5 bg-primary-200 hover:bg-primary-300 text-black font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
             >
               Login
-            </Link> */}
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -167,12 +167,12 @@ export function Navbar() {
                   {item.label}
                 </a>
               ))}
-              {/* <Link
+            <Link
                 href="/auth/login"
                 className="mx-4 mt-2 px-6 py-3 bg-primary-200 hover:bg-primary-300 text-black font-semibold rounded-lg transition-colors duration-200 text-center shadow-sm"
               >
                 Login
-              </Link> */}
+              </Link> 
             </div>
           </div>
         )}
