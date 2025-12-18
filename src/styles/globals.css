@@ -109,4 +109,9 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Hide scrollbars specifically on login page */
+  .login-page {
+    overflow: hidden;
+  }
 }
