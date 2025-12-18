@@ -16,36 +16,48 @@ import { Loader } from '@/components/common/Loader';
  */
 export default function DashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
+  const { isAuthenticated, role, isInitialized } = useAuthStore();
 
   // Redirect based on authentication and role
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
-
-    // Redirect to role-specific dashboard
-    const getRoleDashboardPath = (userRole: string | null): string => {
-      switch (userRole) {
-        case 'admin':
-          return '/dashboard/admin';
-        case 'doctor':
-          return '/dashboard/doctor';
-        case 'radiologist':
-          return '/dashboard/radiologist';
-        case 'technician':
-          return '/dashboard/technician';
-        case 'viewer':
-          return '/dashboard/viewer';
-        default:
-          return '/dashboard/no-role';
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
       }
-    };
 
-    const dashboardPath = getRoleDashboardPath(role);
-    router.push(dashboardPath);
-  }, [isAuthenticated, role, router]);
+      // Redirect to role-specific dashboard
+      const getRoleDashboardPath = (userRole: string | null): string => {
+        switch (userRole) {
+          case 'admin':
+            return '/dashboard/admin';
+          case 'doctor':
+            return '/dashboard/doctor';
+          case 'radiologist':
+            return '/dashboard/radiologist';
+          case 'technician':
+            return '/dashboard/technician';
+          case 'viewer':
+            return '/dashboard/viewer';
+          default:
+            return '/dashboard/no-role';
+        }
+      };
+
+      const dashboardPath = getRoleDashboardPath(role);
+      router.push(dashboardPath);
+    }
+  }, [isAuthenticated, role, isInitialized, router]);
+
+  // Show loading while auth state is being initialized
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-secondary-50">
+        <Loader />
+      </div>
+    );
+  }
 
   // Show loading while redirecting
   return (

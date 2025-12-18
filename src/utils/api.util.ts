@@ -4,6 +4,7 @@
  */
 
 import { API_CONFIG } from '@/config/api.config';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * API Error class for typed error handling
@@ -34,6 +35,7 @@ export interface ApiResponse<T = any> {
 interface FetchOptions extends RequestInit {
   token?: string;
   params?: Record<string, string | number | boolean>;
+  skipAuth?: boolean;
 }
 
 /**
@@ -54,7 +56,11 @@ export async function fetchApi<T = any>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { token, params, headers, ...fetchOptions } = options;
+  const { token, params, headers, skipAuth = false, ...fetchOptions } = options;
+
+  // Get the current auth token if not provided explicitly and not skipping auth
+  const authStore = useAuthStore();
+  const authToken = token ?? (skipAuth ? undefined : authStore.accessToken);
 
   // Build URL with query params if provided
   let url = `${API_CONFIG.baseURL}${endpoint}`;
@@ -69,8 +75,8 @@ export async function fetchApi<T = any>(
   } as Record<string, string>;
 
   // Add authorization header if token provided
-  if (token) {
-    requestHeaders['Authorization'] = `Bearer ${token}`;
+  if (authToken) {
+    requestHeaders['Authorization'] = `Bearer ${authToken}`;
   }
 
   try {
@@ -86,6 +92,49 @@ export async function fetchApi<T = any>(
       responseData = await response.json();
     } else {
       responseData = await response.text();
+    }
+
+    // Check if we got a 401 Unauthorized response and try to refresh the token
+    if (response.status === 401 && !skipAuth && authToken) {
+      const refreshSuccess = await authStore.refreshTokenIfNeeded();
+      if (refreshSuccess) {
+        // Retry the request with the new token
+        const newAuthToken = authStore.accessToken;
+        const retryHeaders: HeadersInit = {
+          ...API_CONFIG.headers,
+          ...headers,
+        };
+        if (newAuthToken) {
+          retryHeaders['Authorization'] = `Bearer ${newAuthToken}`;
+        }
+
+        const retryResponse = await fetch(url, {
+          ...fetchOptions,
+          headers: retryHeaders,
+        });
+
+        let retryResponseData;
+        const retryContentType = retryResponse.headers.get('content-type');
+        if (retryContentType && retryContentType.includes('application/json')) {
+          retryResponseData = await retryResponse.json();
+        } else {
+          retryResponseData = await retryResponse.text();
+        }
+
+        if (!retryResponse.ok) {
+          throw new ApiError(
+            retryResponse.status,
+            retryResponseData?.message || retryResponse.statusText || 'An error occurred after token refresh',
+            retryResponseData
+          );
+        }
+
+        return {
+          data: retryResponseData,
+          success: true,
+          message: retryResponseData?.message,
+        };
+      }
     }
 
     // Handle HTTP errors

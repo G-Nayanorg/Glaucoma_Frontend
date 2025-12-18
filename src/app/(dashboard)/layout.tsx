@@ -22,13 +22,25 @@ interface DashboardLayoutProps {
  */
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isInitialized, router]);
+
+  // Show loader while auth is still being initialized
+  if (!isInitialized) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (

@@ -98,10 +98,10 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Username Field */}
       <div>
-        <label htmlFor="username" className="label">
+        <label htmlFor="username" className="label text-xs">
           Username
         </label>
         <input
@@ -109,18 +109,18 @@ export function LoginForm() {
           type="text"
           value={formData.username}
           onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className="input-field"
+          className="input-field py-1.5 text-sm"
           placeholder="your-username"
           autoComplete="username"
         />
         {errors.username && (
-          <p className="mt-1 text-sm text-error-600">{errors.username}</p>
+          <p className="mt-1 text-xs text-error-600">{errors.username}</p>
         )}
       </div>
 
       {/* Password Field */}
       <div>
-        <label htmlFor="password" className="label">
+        <label htmlFor="password" className="label text-xs">
           Password
         </label>
         <input
@@ -128,18 +128,18 @@ export function LoginForm() {
           type="password"
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="input-field"
+          className="input-field py-1.5 text-sm"
           placeholder="••••••••"
           autoComplete="current-password"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-error-600">{errors.password}</p>
+          <p className="mt-1 text-xs text-error-600">{errors.password}</p>
         )}
       </div>
 
       {/* API Error */}
       {apiError && (
-        <div className="bg-error-50 border border-error-200 text-error-700 px-4 py-3 rounded-lg">
+        <div className="bg-error-50 border border-error-200 text-error-700 px-3 py-2 rounded text-xs">
           {apiError}
         </div>
       )}
@@ -148,7 +148,7 @@ export function LoginForm() {
       <Button
         type="submit"
         variant="primary"
-        size="lg"
+        size="md"
         fullWidth
         isLoading={loading}
       >

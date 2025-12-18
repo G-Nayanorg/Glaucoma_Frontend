@@ -15,24 +15,63 @@ import { useAuthStore } from '@/store/authStore';
 import { getDashboardFeatures, getRoleDisplayName, getRoleBadgeColor } from '@/utils/rbac';
 
 /**
+ * PermissionItem Component
+ */
+function PermissionItem({ label, hasPermission }: { label: string; hasPermission: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-sm text-secondary-700">{label}</span>
+      {hasPermission ? (
+        <span className="text-success-600">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+      ) : (
+        <span className="text-error-600">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * Doctor Dashboard Component
  * Can create patients, make predictions, and review results
  */
 export default function DoctorDashboardPage() {
   const router = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
+  const { isAuthenticated, role, isInitialized } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
 
-    if (role !== 'doctor') {
-      router.push('/dashboard');
-      return;
+      if (role !== 'doctor') {
+        router.push('/dashboard');
+        return;
+      }
     }
-  }, [isAuthenticated, role, router]);
+  }, [isAuthenticated, role, isInitialized, router]);
+
+  // Show nothing (or loading) while auth state is still being initialized
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+          <p className="text-secondary-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || role !== 'doctor') {
     return null;
@@ -176,27 +215,6 @@ export default function DoctorDashboardPage() {
           </div>
         </main>
       </div>
-    </div>
-  );
-}
-
-function PermissionItem({ label, hasPermission }: { label: string; hasPermission: boolean }) {
-  return (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-secondary-700">{label}</span>
-      {hasPermission ? (
-        <span className="text-success-600">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </span>
-      ) : (
-        <span className="text-error-600">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </span>
-      )}
     </div>
   );
 }

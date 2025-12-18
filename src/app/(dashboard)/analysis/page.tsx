@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
@@ -18,7 +18,7 @@ import {
   getRiskLevelColor,
   getPredictionLabelColor,
 } from '@/modules/prediction/services/predictionService';
-import { getPatients } from '@/modules/patient/services/patientService';
+import { getPatients, getPatientById } from '@/modules/patient/services/patientService';
 import type { UserRole } from '@/modules/auth/types';
 import type { Patient } from '@/modules/patient/types';
 
@@ -57,7 +57,8 @@ function formatDate(dateString: string): string {
  */
 export default function AnalysisPage() {
   const router = useRouter();
-  const { isAuthenticated, role } = useAuthStore();
+  const searchParams = useSearchParams();
+  const { isAuthenticated, role, isInitialized } = useAuthStore();
 
   const [patientsWithPredictions, setPatientsWithPredictions] = useState<PatientWithPredictions[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,17 +71,23 @@ export default function AnalysisPage() {
   const canRead = hasPermission(userRole, 'prediction:read');
   const canCreatePrediction = hasPermission(userRole, 'prediction:create');
 
+  // Get patient_id from URL query params
+  const patientIdFromUrl = searchParams.get('patient_id');
+
   // Check authentication and permissions
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login');
-      return;
-    }
+    // Only redirect after auth state has been initialized from storage
+    if (isInitialized) {
+      if (!isAuthenticated) {
+        router.push('/auth/login');
+        return;
+      }
 
-    if (!canRead) {
-      router.push('/dashboard');
+      if (!canRead) {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, canRead, router]);
+  }, [isAuthenticated, canRead, isInitialized, router]);
 
   // Load all patients with their predictions
   const loadPatientsWithPredictions = async () => {
@@ -88,9 +95,24 @@ export default function AnalysisPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch all patients
-      const patientsResponse = await getPatients({ page: 1, page_size: 100 });
-      const patients = patientsResponse.patients;
+      let patients: Patient[] = [];
+
+      // If patient_id is provided in URL, fetch only that patient
+      if (patientIdFromUrl) {
+        try {
+          const patient = await getPatientById(patientIdFromUrl);
+          patients = [patient];
+        } catch (err) {
+          console.error('Error loading patient:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load patient');
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Fetch all patients
+        const patientsResponse = await getPatients({ page: 1, page_size: 100 });
+        patients = patientsResponse.patients;
+      }
 
       // Fetch predictions for each patient
       const patientsWithPreds: PatientWithPredictions[] = [];
@@ -148,7 +170,7 @@ export default function AnalysisPage() {
     if (canRead) {
       loadPatientsWithPredictions();
     }
-  }, [canRead]);
+  }, [canRead, patientIdFromUrl]);
 
   // Filter patients
   const filteredPatients = patientsWithPredictions.filter((pwp) => {
@@ -184,10 +206,24 @@ export default function AnalysisPage() {
     <div className="container-custom py-8">
       {/* Page Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-secondary-900">Analysis & Predictions</h1>
-        <p className="text-secondary-600 mt-1">
-          View all patients with glaucoma detection predictions
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-secondary-900">Analysis & Predictions</h1>
+            <p className="text-secondary-600 mt-1">
+              {patientIdFromUrl && patientsWithPredictions.length > 0
+                ? `Viewing predictions for ${patientsWithPredictions[0].patient.first_name} ${patientsWithPredictions[0].patient.last_name}`
+                : 'View all patients with glaucoma detection predictions'}
+            </p>
+          </div>
+          {patientIdFromUrl && (
+            <Button variant="outline" onClick={() => router.push('/analysis')}>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to All Patients
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -293,7 +329,7 @@ export default function AnalysisPage() {
           {filteredPatients.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPatients.map((pwp) => (
-                <PatientPredictionCard key={pwp.patient.id} data={pwp} onViewDetails={setSelectedPatient} />
+                <PatientPredictionCard key={pwp.patient.patient_id} data={pwp} onViewDetails={setSelectedPatient} />
               ))}
             </div>
           )}
@@ -429,15 +465,160 @@ interface PredictionDetailsModalProps {
   onClose: () => void;
 }
 
-function PredictionDetailsModal({ data, onClose }: PredictionDetailsModalProps) {
-  const { patient, totalPredictions, latestPrediction, glaucomaDetections, normalResults, highestRiskLevel } =
-    data;
+interface Prediction {
+  id: number;
+  prediction_id: string;
+  label: string;
+  confidence: number;
+  probability: number;
+  risk_level: string;
+  recommendations: string[];
+  is_reviewed: boolean;
+  reviewed_by_user_id: number | null;
+  reviewed_at: string | null;
+  created_at: string;
+  processing_time_ms?: number;
+  cached?: boolean;
+  prediction?: string;
+}
 
-  if (!latestPrediction) return null;
+interface PatientPredictionsResponse {
+  patient_id: string;
+  patient_name: string;
+  total: number;
+  page: number;
+  page_size: number;
+  predictions: Prediction[];
+}
+
+function PredictionDetailsModal({ data, onClose }: PredictionDetailsModalProps) {
+  const { patient, totalPredictions, latestPrediction, glaucomaDetections, normalResults, highestRiskLevel } = data;
+  const [predictions, setPredictions] = useState<Prediction[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { accessToken } = useAuthStore();
+
+  // Fetch all predictions for this patient
+  useEffect(() => {
+    const fetchPatientPredictions = async () => {
+      try {
+        setLoading(true);
+        // Using the backend server on port 8000
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/patients/${patient.patient_id}/predictions`, {
+          headers: {
+            'Content-Type': 'application/json',
+            // Include authorization token from auth store
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch predictions: ${response.status} ${response.statusText}`);
+        }
+
+        const data: PatientPredictionsResponse = await response.json();
+        setPredictions(data.predictions);
+      } catch (err) {
+        console.error('Error fetching patient predictions:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load patient predictions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatientPredictions();
+  }, [patient.patient_id, accessToken]);
+
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl p-8 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mb-4"></div>
+            <p className="text-secondary-600">Loading predictions...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="px-6 py-4 border-b border-secondary-200 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-secondary-900">Prediction Details</h2>
+            <button onClick={onClose} className="text-secondary-400 hover:text-secondary-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Error Content */}
+          <div className="p-6 flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-error-500 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-secondary-900 mb-2">Error Loading Predictions</h3>
+              <p className="text-secondary-600 mb-4">{error}</p>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!predictions || predictions.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+          {/* Modal Header */}
+          <div className="px-6 py-4 border-b border-secondary-200 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-secondary-900">Prediction Details</h2>
+            <button onClick={onClose} className="text-secondary-400 hover:text-secondary-600">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* No Predictions Content */}
+          <div className="p-6 flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-secondary-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-secondary-900 mb-2">No Predictions Found</h3>
+              <p className="text-secondary-600 mb-4">This patient does not have any predictions yet.</p>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full">
+      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-secondary-200 flex items-center justify-between">
           <div>
@@ -456,99 +637,103 @@ function PredictionDetailsModal({ data, onClose }: PredictionDetailsModalProps) 
           </button>
         </div>
 
-        {/* Modal Body - Single View, No Scroll */}
-        <div className="p-6">
-          {/* Top Row: Status, Cached, Label */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="text-sm">
-                <span className="text-secondary-600">Status:</span>{' '}
-                <span className="text-success-700 font-semibold">Success</span>
-              </div>
-              {latestPrediction.cached !== undefined && (
-                <div className="text-sm">
-                  <span className="text-secondary-600">Cached:</span>{' '}
-                  <span className={latestPrediction.cached ? 'text-success-700 font-semibold' : 'text-secondary-700 font-semibold'}>
-                    {latestPrediction.cached ? 'Yes' : 'No'}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div
-              className={`px-6 py-2 rounded-lg text-xl font-bold ${getPredictionLabelColor(
-                latestPrediction.label
-              )}`}
-            >
-              {latestPrediction.label.toUpperCase()}
-            </div>
-          </div>
-
-          {/* Prediction ID */}
-          <div className="mb-4 p-3 bg-secondary-50 rounded-lg">
-            <p className="text-xs text-secondary-600 mb-1">Prediction ID</p>
-            <p className="text-sm font-mono text-secondary-900">{latestPrediction.prediction_id}</p>
-          </div>
-
-          {/* Core Metrics Grid */}
-          <div className="grid grid-cols-5 gap-3 mb-4">
-            <div className="bg-primary-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-primary-700 font-medium mb-1">Prediction</p>
-              <p className="text-xl font-bold text-primary-900">{latestPrediction.prediction}</p>
-            </div>
-            <div className="bg-secondary-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-secondary-600 font-medium mb-1">Probability</p>
-              <p className="text-base font-bold text-secondary-900">
-                {latestPrediction.probability?.toFixed(4) || 'N/A'}
-              </p>
-            </div>
-            <div className="bg-secondary-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-secondary-600 font-medium mb-1">Confidence</p>
-              <p className="text-base font-bold text-secondary-900">
-                {latestPrediction.confidence?.toFixed(4) || 'N/A'}
-              </p>
-            </div>
-            <div className="bg-secondary-50 rounded-lg p-3 text-center">
-              <p className="text-xs text-secondary-600 font-medium mb-1">Processing</p>
-              <p className="text-base font-bold text-secondary-900">{latestPrediction.processing_time_ms}ms</p>
-            </div>
-            <div className={`rounded-lg p-3 text-center border-2 ${getRiskLevelColor(latestPrediction.risk_level)}`}>
-              <p className="text-xs font-medium mb-1">Risk Level</p>
-              <p className="text-base font-bold">{latestPrediction.risk_level?.toUpperCase()}</p>
-            </div>
-          </div>
-
-          {/* Timestamp */}
-          <div className="mb-4 flex items-center justify-between text-sm">
-            <span className="text-secondary-600 font-medium">Timestamp:</span>
-            <span className="text-secondary-900">{new Date(latestPrediction.created_at).toLocaleString()}</span>
-          </div>
-
-          {/* Recommendations */}
-          {latestPrediction.recommendations && latestPrediction.recommendations.length > 0 && (
+        {/* Modal Body - Scrollable Container */}
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="space-y-6">
+            {/* All Predictions List */}
             <div>
-              <p className="text-sm font-medium text-secondary-700 mb-2">Recommendations</p>
-              <div className="bg-secondary-50 rounded-lg p-4">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  {latestPrediction.recommendations.map((rec: string, index: number) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <svg
-                        className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span className="text-xs text-secondary-700">{rec}</span>
+              <h3 className="text-lg font-semibold text-secondary-900 mb-4">All Predictions for Patient</h3>
+
+              {predictions.map((prediction, index) => (
+                <div key={prediction.id} className={`border rounded-lg p-4 mb-4 ${index !== predictions.length - 1 ? 'border-b border-secondary-200 pb-4 mb-6' : ''}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm">
+                        <span className="text-secondary-600">Status:</span>{' '}
+                        <span className="text-success-700 font-semibold">Success</span>
+                      </div>
+                      {prediction.cached !== undefined && (
+                        <div className="text-sm">
+                          <span className="text-secondary-600">Cached:</span>{' '}
+                          <span className={prediction.cached ? 'text-success-700 font-semibold' : 'text-secondary-700 font-semibold'}>
+                            {prediction.cached ? 'Yes' : 'No'}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  ))}
+
+                    <div
+                      className={`px-4 py-2 rounded-lg text-lg font-bold ${getPredictionLabelColor(prediction.label)}`}
+                    >
+                      {prediction.label.toUpperCase()}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div className="p-3 bg-secondary-50 rounded-lg">
+                      <p className="text-xs text-secondary-600 mb-1">Prediction ID</p>
+                      <p className="text-sm font-mono text-secondary-900 break-all">{prediction.prediction_id}</p>
+                    </div>
+
+                    <div className="bg-primary-50 rounded-lg p-3">
+                      <p className="text-xs text-primary-700 font-medium mb-1">Probability</p>
+                      <p className="text-xl font-bold text-primary-900">{prediction.probability?.toFixed(4)}</p>
+                    </div>
+
+                    <div className="bg-secondary-50 rounded-lg p-3">
+                      <p className="text-xs text-secondary-600 font-medium mb-1">Confidence</p>
+                      <p className="text-base font-bold text-secondary-900">{prediction.confidence?.toFixed(4)}</p>
+                    </div>
+
+                    <div className={`rounded-lg p-3 text-center border-2 ${getRiskLevelColor(prediction.risk_level)}`}>
+                      <p className="text-xs font-medium mb-1">Risk Level</p>
+                      <p className="text-base font-bold">{prediction.risk_level?.toUpperCase()}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-secondary-600 font-medium">Timestamp:</span>
+                      <span className="text-secondary-900">{new Date(prediction.created_at).toLocaleString()}</span>
+                    </div>
+                    {prediction.processing_time_ms !== undefined && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-secondary-600 font-medium">Processing Time:</span>
+                        <span className="text-secondary-900">{prediction.processing_time_ms}ms</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommendations */}
+                  {prediction.recommendations && prediction.recommendations.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-secondary-700 mb-2">Recommendations</p>
+                      <div className="bg-secondary-50 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+                          {prediction.recommendations.map((rec: string, recIndex: number) => (
+                            <div key={recIndex} className="flex items-start gap-2">
+                              <svg
+                                className="w-4 h-4 text-primary-600 flex-shrink-0 mt-0.5"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span className="text-xs text-secondary-700">{rec}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Modal Footer */}
