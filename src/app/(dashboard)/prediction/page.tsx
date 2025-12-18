@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
 import { Loader } from '@/components/common/Loader';
@@ -269,10 +270,12 @@ export default function PredictionPage() {
                 <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
                   {previews.map((preview, index) => (
                     <div key={index} className="relative aspect-square">
-                      <img
+                      <Image
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover rounded-lg border border-secondary-200"
+                        className="object-cover rounded-lg border border-secondary-200"
+                        fill
+                        unoptimized
                       />
                     </div>
                   ))}
