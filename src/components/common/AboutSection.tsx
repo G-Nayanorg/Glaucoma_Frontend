@@ -15,7 +15,7 @@ export function AboutSection() {
     const row2Content = useScrollAnimation<HTMLDivElement>();
 
     return (
-        <section id="about" className="section bg-white">
+        <section id="about" className="section bg-white pb-0">
             <div className="container-custom">
                 <h2 className="section-title">About Our Platform</h2>
                 <p className="section-subtitle">

@@ -9,6 +9,7 @@ import { Card } from '@/components/common/Card';
 import { Navbar } from '@/components/common/Navbar';
 import { HeroSection } from '@/components/common/HeroSection';
 import { AboutSection } from '@/components/common/AboutSection';
+import { TestimonialsSection } from '@/components/common/TestimonialsSection';
 
 export default function HomePage() {
   return (
@@ -244,80 +245,9 @@ export default function HomePage() {
         </div>
       </section>
 
+
       {/* Testimonials */}
-      <section className="section bg-white">
-        <div className="container-custom">
-          <h2 className="section-title">What Healthcare Professionals Say</h2>
-          <p className="section-subtitle">
-            Trusted by ophthalmologists and medical institutions worldwide
-          </p>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="border-2 border-primary-100">
-              <div className="mb-4">
-                <svg className="w-8 h-8 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-              </div>
-              <p className="text-medical-gray-700 mb-4 italic">
-                "This platform has revolutionized our glaucoma screening process. We can now screen 3x more patients
-                with greater accuracy and confidence."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-primary-200 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-primary-800 font-semibold">DM</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Dr. Michael Chen</div>
-                  <div className="text-sm text-medical-gray-600">Ophthalmologist, Johns Hopkins</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="border-2 border-primary-100">
-              <div className="mb-4">
-                <svg className="w-8 h-8 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-              </div>
-              <p className="text-medical-gray-700 mb-4 italic">
-                "The accuracy is impressive. It's become an indispensable tool in our clinic for early glaucoma detection.
-                Highly recommended!"
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-primary-200 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-primary-800 font-semibold">SP</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Dr. Sarah Patel</div>
-                  <div className="text-sm text-medical-gray-600">Director, Vision Care Institute</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="border-2 border-primary-100">
-              <div className="mb-4">
-                <svg className="w-8 h-8 text-primary-200" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                </svg>
-              </div>
-              <p className="text-medical-gray-700 mb-4 italic">
-                "Easy to use and incredibly reassuring. The detailed reports help me understand my eye health better and
-                communicate effectively with my doctor."
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-primary-200 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-primary-800 font-semibold">RJ</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Robert Johnson</div>
-                  <div className="text-sm text-medical-gray-600">Patient</div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* Research & Validation */}
       <section className="section bg-primary-50">
@@ -437,7 +367,7 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
-            <p>&copy; 2024 Glaucoma Detection AI. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Glaucoma Detection AI. All rights reserved.</p>
             <p className="mt-2">Built with advanced AI and deep learning for better eye care.</p>
           </div>
         </div>
