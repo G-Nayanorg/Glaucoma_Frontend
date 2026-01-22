@@ -25,7 +25,12 @@
   }
 
   /* Heading styles with Space Grotesk */
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-grotesk font-light text-black;
     font-family: var(--font-grotesk);
     line-height: 1.2;
@@ -83,7 +88,7 @@
   }
 
   .section {
-    @apply py-16 md:py-24;
+    @apply py-10 md:py-14;
   }
 
   .section-title {
@@ -91,7 +96,7 @@
   }
 
   .section-subtitle {
-    @apply text-lg md:text-xl text-center text-medical-gray-600 mb-12 max-w-3xl mx-auto;
+    @apply text-lg md:text-xl text-center text-medical-gray-600 mb-6 max-w-3xl mx-auto;
   }
 }
 
@@ -113,5 +118,24 @@
   /* Hide scrollbars specifically on login page */
   .login-page {
     overflow: hidden;
+  }
+
+  /* Scroll-triggered slide animations */
+  .slide-in-left {
+    opacity: 0;
+    transform: translateX(-100px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .slide-in-right {
+    opacity: 0;
+    transform: translateX(100px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .slide-in-left.in-view,
+  .slide-in-right.in-view {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

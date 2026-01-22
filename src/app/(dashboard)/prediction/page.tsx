@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/common/Button';
 import { Loader } from '@/components/common/Loader';
+import { ReportPreviewModal } from '@/components/report/ReportPreviewModal';
 import { hasPermission } from '@/utils/rbac';
 import {
   makePrediction,
@@ -41,6 +42,7 @@ export default function PredictionPage() {
   const [results, setResults] = useState<PredictionResult | BatchPredictionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [useCache, setUseCache] = useState(true);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const userRole = (role as UserRole) || 'no_role';
   const canPredict = hasPermission(userRole, 'prediction:create');
@@ -204,154 +206,33 @@ export default function PredictionPage() {
 
       {/* Patient Info */}
       {patient && (
-          <div className="bg-white rounded-lg shadow-soft p-4 mb-6 border-l-4 border-primary-600">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-primary-700 font-medium">
-                  {patient.first_name.charAt(0)}
-                  {patient.last_name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <h3 className="font-medium text-secondary-900">
-                  {patient.first_name} {patient.last_name}
-                </h3>
-                <p className="text-sm text-secondary-500">Patient ID: {patient.patient_id}</p>
-              </div>
+        <div className="bg-white rounded-lg shadow-soft p-4 mb-6 border-l-4 border-primary-600">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+              <span className="text-primary-700 font-medium">
+                {patient.first_name.charAt(0)}
+                {patient.last_name.charAt(0)}
+              </span>
+            </div>
+            <div>
+              <h3 className="font-medium text-secondary-900">
+                {patient.first_name} {patient.last_name}
+              </h3>
+              <p className="text-sm text-secondary-500">Patient ID: {patient.patient_id}</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Upload Section */}
-          <div className="bg-white rounded-lg shadow-soft p-6">
-            <h2 className="text-xl font-semibold text-secondary-900 mb-4">Upload Images</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upload Section */}
+        <div className="bg-white rounded-lg shadow-soft p-6">
+          <h2 className="text-xl font-semibold text-secondary-900 mb-4">Upload Images</h2>
 
-            {/* File Input */}
-            <div className="mb-4">
-              <label className="block w-full">
-                <div className="border-2 border-dashed border-secondary-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer">
-                  <svg
-                    className="mx-auto h-12 w-12 text-secondary-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="mt-2 text-sm text-secondary-600">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-xs text-secondary-500 mt-1">
-                    PNG or JPEG (Max 20 images)
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            {/* Image Previews */}
-            {previews.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-secondary-700 mb-2">
-                  Selected Images ({previews.length})
-                </h3>
-                <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                  {previews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <Image
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        className="object-cover rounded-lg border border-secondary-200"
-                        fill
-                        unoptimized
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Options */}
-            <div className="mb-4">
-              <label className="flex items-center gap-2 text-sm text-secondary-700">
-                <input
-                  type="checkbox"
-                  checked={useCache}
-                  onChange={(e) => setUseCache(e.target.checked)}
-                  className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
-                />
-                Use cached results (faster)
-              </label>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="mb-4 bg-error-50 border border-error-200 text-error-700 rounded-lg p-3 text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button
-                variant="primary"
-                onClick={handlePredict}
-                disabled={loading || selectedFiles.length === 0 || !patientId.trim()}
-                className="flex-1"
-              >
-                {loading ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Analyzing...
-                  </>
-                ) : (
-                  'Analyze'
-                )}
-              </Button>
-              {selectedFiles.length > 0 && (
-                <Button variant="outline" onClick={handleClear} disabled={loading}>
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Results Section */}
-          <div className="bg-white rounded-lg shadow-soft p-6">
-            <h2 className="text-xl font-semibold text-secondary-900 mb-4">Results</h2>
-
-            {!results && (
-              <div className="text-center py-12 text-secondary-500">
+          {/* File Input */}
+          <div className="mb-4">
+            <label className="block w-full">
+              <div className="border-2 border-dashed border-secondary-300 rounded-lg p-8 text-center hover:border-primary-500 transition-colors cursor-pointer">
                 <svg
                   className="mx-auto h-12 w-12 text-secondary-400"
                   fill="none"
@@ -362,22 +243,170 @@ export default function PredictionPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="mt-2">Upload images and click Analyze to see results</p>
+                <p className="mt-2 text-sm text-secondary-600">
+                  Click to upload or drag and drop
+                </p>
+                <p className="text-xs text-secondary-500 mt-1">
+                  PNG or JPEG (Max 20 images)
+                </p>
               </div>
-            )}
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
 
-            {results && !isBatchResult && (
-              <SinglePredictionResult result={results as PredictionResult} />
-            )}
+          {/* Image Previews */}
+          {previews.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-secondary-700 mb-2">
+                Selected Images ({previews.length})
+              </h3>
+              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative aspect-square">
+                    <Image
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="object-cover rounded-lg border border-secondary-200"
+                      fill
+                      unoptimized
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-            {results && isBatchResult && (
-              <BatchPredictionResults result={results as BatchPredictionResult} />
+          {/* Options */}
+          <div className="mb-4">
+            <label className="flex items-center gap-2 text-sm text-secondary-700">
+              <input
+                type="checkbox"
+                checked={useCache}
+                onChange={(e) => setUseCache(e.target.checked)}
+                className="rounded border-secondary-300 text-primary-600 focus:ring-primary-500"
+              />
+              Use cached results (faster)
+            </label>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mb-4 bg-error-50 border border-error-200 text-error-700 rounded-lg p-3 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              variant="primary"
+              onClick={handlePredict}
+              disabled={loading || selectedFiles.length === 0 || !patientId.trim()}
+              className="flex-1"
+            >
+              {loading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Analyzing...
+                </>
+              ) : (
+                'Analyze'
+              )}
+            </Button>
+            {selectedFiles.length > 0 && (
+              <Button variant="outline" onClick={handleClear} disabled={loading}>
+                Clear
+              </Button>
             )}
           </div>
         </div>
+
+        {/* Results Section */}
+        <div className="bg-white rounded-lg shadow-soft p-6">
+          <h2 className="text-xl font-semibold text-secondary-900 mb-4">Results</h2>
+
+          {!results && (
+            <div className="text-center py-12 text-secondary-500">
+              <svg
+                className="mx-auto h-12 w-12 text-secondary-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <p className="mt-2">Upload images and click Analyze to see results</p>
+            </div>
+          )}
+
+          {results && !isBatchResult && (
+            <SinglePredictionResult result={results as PredictionResult} />
+          )}
+
+          {results && isBatchResult && (
+            <BatchPredictionResults result={results as BatchPredictionResult} />
+          )}
+
+          {/* View Report Button */}
+          {results && (
+            <div className="mt-6 pt-4 border-t border-secondary-200">
+              <Button
+                variant="primary"
+                onClick={() => setShowReportModal(true)}
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                View Report & Download PDF
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Report Preview Modal */}
+      {results && (
+        <ReportPreviewModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          patient={patient}
+          result={results}
+          patientId={patientId}
+        />
+      )}
     </div>
   );
 }
