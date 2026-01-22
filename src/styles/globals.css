@@ -196,6 +196,12 @@
 
   .ticker-card {
     flex-shrink: 0;
-    width: 380px;
+    width: 300px;
+  }
+
+  @media (min-width: 768px) {
+    .ticker-card {
+      width: 380px;
+    }
   }
 }

@@ -32,7 +32,7 @@ export default function HomePage() {
             Simple, fast, and accurate glaucoma detection in four easy steps
           </p>
 
-          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto mt-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 max-w-6xl mx-auto mt-12">
             {/* Step 1 */}
             <Card className="text-center relative pt-16">
               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-primary-200 rounded-full flex items-center justify-center text-2xl font-bold">
@@ -108,7 +108,7 @@ export default function HomePage() {
             Advanced capabilities powered by cutting-edge artificial intelligence
           </p>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
             <Card hoverable className="border-2 border-primary-100">
               <div className="w-12 h-12 bg-primary-200 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,7 +193,7 @@ export default function HomePage() {
             Empowering healthcare professionals and patients worldwide
           </p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 max-w-6xl mx-auto">
             <Card className="text-center border-2 border-primary-100">
               <div className="w-16 h-16 bg-primary-200 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8 text-primary-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,9 +319,9 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black text-white py-12">
+      <footer className="bg-black text-white py-8 md:py-12">
         <div className="container-custom">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 bg-primary-200 rounded-lg flex items-center justify-center">
