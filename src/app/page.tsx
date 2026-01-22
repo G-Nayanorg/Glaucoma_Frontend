@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Card } from '@/components/common/Card';
 import { Navbar } from '@/components/common/Navbar';
 import { HeroSection } from '@/components/common/HeroSection';
+import { AboutSection } from '@/components/common/AboutSection';
 
 export default function HomePage() {
   return (
@@ -18,82 +19,9 @@ export default function HomePage() {
       {/* Hero Section */}
       <HeroSection />
 
+
       {/* About the Application */}
-      <section id="about" className="section bg-white">
-        <div className="container-custom">
-          <h2 className="section-title">About Our Platform</h2>
-          <p className="section-subtitle">
-            Revolutionizing eye care through artificial intelligence
-          </p>
-
-          <div className="max-w-6xl mx-auto space-y-12">
-            {/* First Row: The Problem + Our Solution | About-1 Image */}
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h3 className="text-2xl font-semibold mb-4">The Problem</h3>
-                <p className="text-medical-gray-700 mb-6 leading-relaxed">
-                  Glaucoma is the leading cause of irreversible blindness worldwide, affecting over 80 million people.
-                  Early detection is crucial, as vision loss from glaucoma is permanent and cannot be restored.
-                  Traditional screening methods can be time-consuming and require specialized expertise.
-                </p>
-
-                <h3 className="text-2xl font-semibold mb-4">Our Solution</h3>
-                <p className="text-medical-gray-700 leading-relaxed">
-                  Our platform uses advanced AI algorithms and deep learning models to detect early signs of glaucoma
-                  from fundus and OCT images. With high accuracy and instant results, we help ophthalmologists and
-                  healthcare providers screen patients faster and more efficiently, enabling early intervention and
-                  better patient outcomes.
-                </p>
-              </div>
-
-              <div className="relative h-[400px]">
-                <Image
-                  src="/About-1.jpg"
-                  alt="Glaucoma Detection Technology"
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-            </div>
-
-            {/* Second Row: About-2 Image | Technology Stack */}
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="relative h-[400px]">
-                <Image
-                  src="/About-2.jpg"
-                  alt="AI-Powered Eye Care"
-                  fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-
-              <div>
-                <h3 className="text-2xl font-semibold mb-6">Technology Stack</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-primary-200 rounded-full mt-2 mr-3"></span>
-                    <span className="text-medical-gray-700"><strong>Deep Learning:</strong> Convolutional Neural Networks (CNNs) for image analysis</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-primary-200 rounded-full mt-2 mr-3"></span>
-                    <span className="text-medical-gray-700"><strong>Medical Imaging:</strong> Specialized fundus and OCT image processing</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-primary-200 rounded-full mt-2 mr-3"></span>
-                    <span className="text-medical-gray-700"><strong>AI Models:</strong> Trained on thousands of validated clinical images</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-primary-200 rounded-full mt-2 mr-3"></span>
-                    <span className="text-medical-gray-700"><strong>Cloud Computing:</strong> Fast, scalable infrastructure for instant results</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <AboutSection />
 
       {/* Detection */}
       <section id="detection" className="section bg-primary-50">
@@ -103,7 +31,7 @@ export default function HomePage() {
             Simple, fast, and accurate glaucoma detection in four easy steps
           </p>
 
-          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 max-w-6xl mx-auto mt-12">
             {/* Step 1 */}
             <Card className="text-center relative pt-16">
               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-primary-200 rounded-full flex items-center justify-center text-2xl font-bold">
